@@ -1,18 +1,27 @@
 language: java
+
 sudo: false
+
 jdk:
-- openjdk11
+  - openjdk11
+
 services:
-- postgresql
+  - postgresql
+
 before_install:
-- psql -c 'create database chat;' -U postgres
+  - psql -c 'create database chat;' -U postgres
+
 install: true
+
 script: mvn clean package -DskipTests=true
+
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash)
+
 env:
   global:
-  - CODECOV_TOKEN='0d0f82f0-ee80-4ac8-9ad3-09a22d09317f'
+    - CODECOV_TOKEN='0d0f82f0-ee80-4ac8-9ad3-09a22d09317f'
+
 notifications:
   email:
     recipients:

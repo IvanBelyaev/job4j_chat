@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -38,6 +39,7 @@ public class RoleControllerTest {
     private ObjectMapper mapper;
 
     @Test
+    @WithMockUser
     public void whenFindAllThenReturnsAllRoles() throws Exception {
         Role user = new Role("user");
         user.setId(1);
@@ -54,6 +56,7 @@ public class RoleControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void whenFindByIdWithExistingIDThenReturnsRoleWithThisId() throws Exception {
         Role user = new Role("user");
         user.setId(1);
@@ -67,6 +70,7 @@ public class RoleControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void whenGetRoleByNameThenReturnsRoleWithTheSameName() throws Exception {
         Role user = new Role("user");
         user.setId(1);
@@ -80,6 +84,7 @@ public class RoleControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void whenPostRoleThenCreatesNewRole() throws Exception {
         Role user = new Role("user");
         user.setId(1);
@@ -97,6 +102,7 @@ public class RoleControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void whenPutRoleThenUpdatesRole() throws Exception {
         Role user = new Role("user");
         user.setId(1);
@@ -112,6 +118,7 @@ public class RoleControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void whenDeleteRoleThenRoleIsDeleted() throws Exception {
         Role user = new Role("");
         doNothing().when(roleRepository).delete(user);

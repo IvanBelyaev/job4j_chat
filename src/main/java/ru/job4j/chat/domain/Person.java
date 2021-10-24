@@ -28,6 +28,9 @@ public class Person {
     private String name;
 
     @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
     private LocalDateTime created = LocalDateTime.now();
 
     @Column(name = "role_id", nullable = false)

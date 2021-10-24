@@ -10,6 +10,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.client.RestTemplate;
@@ -43,6 +44,7 @@ public class PersonControllerTest {
     private RestTemplate restTemplate;
 
     @Test
+    @WithMockUser
     public void whenFindAllThenReturnsAllPersons() throws Exception {
         Person sergey = new Person("Sergey");
         sergey.setId(1);
@@ -70,6 +72,7 @@ public class PersonControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void whenFindByIdWithExistingIDThenReturnsPersonWithThisId() throws Exception {
         Person oleg = new Person("Oleg");
         oleg.setId(1);

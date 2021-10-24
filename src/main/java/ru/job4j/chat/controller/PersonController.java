@@ -4,6 +4,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,10 +30,12 @@ import java.util.stream.StreamSupport;
 public class PersonController {
     private final PersonRepository personRepository;
     private final RestTemplate restTemplate;
+    private final PasswordEncoder encoder;
 
-    public PersonController(PersonRepository personRepository, RestTemplate restTemplate) {
+    public PersonController(PersonRepository personRepository, RestTemplate restTemplate, PasswordEncoder encoder) {
         this.personRepository = personRepository;
         this.restTemplate = restTemplate;
+        this.encoder = encoder;
     }
 
     @GetMapping("/")
@@ -73,10 +76,11 @@ public class PersonController {
      * @param person new person
      * @return person with id. Person has default Role (USER).
      */
-    @PostMapping("/")
+    @PostMapping({"/", "/sign-up/"})
     public ResponseEntity<Person> create(@RequestBody Person person) {
-        Role userRole = restTemplate.getForObject("http://localhost:8080/role/name/USER", Role.class);
+        Role userRole = restTemplate.getForObject("http://localhost:8080/role/name/ROLE_USER", Role.class);
         person.setRoleId(userRole.getId());
+        person.setPassword(encoder.encode(person.getPassword()));
         return new ResponseEntity<Person>(
                 this.personRepository.save(person),
                 HttpStatus.CREATED

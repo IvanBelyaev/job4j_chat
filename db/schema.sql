@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS room (
 CREATE TABLE IF NOT EXISTS person (
 	id serial PRIMARY KEY,
 	name varchar(200) UNIQUE NOT NULL,
+	password varchar(200) NOT NULL,
 	created timestamp NOT NULL,
 	role_id integer NOT NULL
 );
@@ -25,4 +26,5 @@ CREATE TABLE IF NOT EXISTS role (
 	name varchar(200) UNIQUE NOT NULL
 );
 
-INSERT INTO role (name) values ('USER');
+INSERT INTO role (name) values ('ROLE_USER');
+INSERT INTO role (name) values ('ROLE_ADMIN');
