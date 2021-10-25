@@ -63,7 +63,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
                     .getSubject();
 
             if (user != null) {
-                Person person = personRepository.findByName(user);
+                Person person = personRepository.findByName(user).get();
                 Role role = roleRepository.findById(person.getRoleId()).get();
                 return new UsernamePasswordAuthenticationToken(user, null, List.of(role));
             }
