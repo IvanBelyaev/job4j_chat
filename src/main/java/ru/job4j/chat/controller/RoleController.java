@@ -38,10 +38,11 @@ public class RoleController {
     }
 
     @GetMapping("/")
-    public List<Role> findAll() {
-        return StreamSupport.stream(
+    public ResponseEntity<List<Role>> findAll() {
+        List<Role> roles = StreamSupport.stream(
                 this.roleRepository.findAll().spliterator(), false
         ).collect(Collectors.toList());
+        return ResponseEntity.ok(roles);
     }
 
     @GetMapping("/{id}")
@@ -50,14 +51,14 @@ public class RoleController {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Role with id = " + id + " not found"
                 ));
-        return new ResponseEntity<>(role, HttpStatus.OK);
+        return ResponseEntity.ok(role);
     }
 
     @GetMapping("/name/{name}")
     public ResponseEntity<Role> getRoleByName(@PathVariable String name) {
         Role role = roleRepository.findByName(name)
                 .orElseThrow(() -> new ThereIsNoRoleWithThisNameException("There is no role named " + name));
-        return new ResponseEntity<Role>(role, HttpStatus.OK);
+        return ResponseEntity.ok(role);
     }
 
     @PostMapping("/")

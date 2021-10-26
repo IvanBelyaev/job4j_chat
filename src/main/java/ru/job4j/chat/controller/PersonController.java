@@ -40,8 +40,8 @@ public class PersonController {
     }
 
     @GetMapping("/")
-    public List<Person> findAll() {
-        return StreamSupport.stream(
+    public ResponseEntity<List<Person>> findAll() {
+        List<Person> people = StreamSupport.stream(
                 this.personRepository.findAll().spliterator(), false
         )
                 .map(person -> {
@@ -54,6 +54,7 @@ public class PersonController {
                     return person;
                 })
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(people);
     }
 
     @GetMapping("/{id}")

@@ -37,9 +37,10 @@ public class RoomController {
     }
 
     @GetMapping("/")
-    public List<Room> findAll() {
-        return StreamSupport.stream(roomRepository.findAll().spliterator(), false)
+    public ResponseEntity<List<Room>> findAll() {
+        List<Room> rooms = StreamSupport.stream(roomRepository.findAll().spliterator(), false)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(rooms);
     }
 
     @GetMapping("/{id}")
@@ -53,12 +54,12 @@ public class RoomController {
                 HttpMethod.GET, null, new ParameterizedTypeReference<List<Message>>() { })
                 .getBody();
         room.setMessages(messages);
-        return new ResponseEntity<>(room, HttpStatus.OK);
+        return ResponseEntity.ok(room);
     }
 
     @GetMapping("/authorId/{authorId}")
-    public List<Room> findAllRoomCreatedByUser(@PathVariable int authorId) {
-        return roomRepository.findByAuthorId(authorId);
+    public ResponseEntity<List<Room>> findAllRoomCreatedByUser(@PathVariable int authorId) {
+        return ResponseEntity.ok(roomRepository.findByAuthorId(authorId));
     }
 
     @PostMapping("/")

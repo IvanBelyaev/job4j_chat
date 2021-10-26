@@ -38,12 +38,12 @@ public class MessageController {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Message with id = " + id + " not found"
                 ));
-        return new ResponseEntity<>(message, HttpStatus.OK);
+        return ResponseEntity.ok(message);
     }
 
     @GetMapping("/roomId/{roomId}")
-    public List<Message> findAllRoomMessages(@PathVariable int roomId) {
-        return messageRepository.findByRoomId(roomId);
+    public ResponseEntity<List<Message>> findAllRoomMessages(@PathVariable int roomId) {
+        return ResponseEntity.ok(messageRepository.findByRoomId(roomId));
     }
 
     @PostMapping("/")
