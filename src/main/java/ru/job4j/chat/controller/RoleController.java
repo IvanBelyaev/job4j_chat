@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.domain.Role;
+import ru.job4j.chat.dto.RoleDTO;
 import ru.job4j.chat.exception.ThereIsNoRoleWithThisNameException;
 import ru.job4j.chat.repository.RoleRepository;
 
@@ -63,7 +65,7 @@ public class RoleController {
 
     @PostMapping("/")
     public ResponseEntity<Role> create(@RequestBody Role role) {
-        checkRole(role);
+        checkName(role.getName());
         return new ResponseEntity<Role>(
                 this.roleRepository.save(role),
                 HttpStatus.CREATED
@@ -72,9 +74,23 @@ public class RoleController {
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Role role) {
-        checkRole(role);
+        checkName(role.getName());
         this.roleRepository.save(role);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Role> changeSomeFields(@PathVariable int id, @RequestBody RoleDTO patch) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Role with id = " + id + " not found"
+                ));
+        String name = patch.getName();
+        if (name != null) {
+            checkName(name);
+            role.setName(name);
+        }
+        return ResponseEntity.ok(roleRepository.save(role));
     }
 
     @DeleteMapping("/{id}")
@@ -96,12 +112,12 @@ public class RoleController {
                 } }));
     }
 
-    private void checkRole(Role role) {
-        if (role.getName() == null || role.getName().isEmpty()) {
+    private void checkName(String roleName) {
+        if (roleName == null || roleName.isEmpty()) {
             throw new IllegalArgumentException("Name of role must not be empty");
         }
-        if (roleRepository.findByName(role.getName()).isPresent()) {
-            throw new IllegalArgumentException("Name of role " + role.getName() + " already exists");
+        if (roleRepository.findByName(roleName).isPresent()) {
+            throw new IllegalArgumentException("Name of role " + roleName + " already exists");
         }
     }
 }

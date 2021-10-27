@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,8 +20,10 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.domain.Person;
 import ru.job4j.chat.domain.Role;
 import ru.job4j.chat.domain.Room;
+import ru.job4j.chat.dto.PersonDTO;
 import ru.job4j.chat.repository.PersonRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -79,7 +82,8 @@ public class PersonController {
      */
     @PostMapping({"/", "/sign-up/"})
     public ResponseEntity<Person> create(@RequestBody Person person) {
-        checkNameAndPassword(person);
+        checkName(person.getName());
+        checkPassword(person.getPassword());
         Role userRole = restTemplate.getForObject("http://localhost:8080/role/name/ROLE_USER", Role.class);
         person.setRoleId(userRole.getId());
         person.setPassword(encoder.encode(person.getPassword()));
@@ -96,9 +100,11 @@ public class PersonController {
      */
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Person person) {
-        checkNameAndPassword(person);
+        checkName(person.getName());
+        checkPassword(person.getPassword());
         Person personInDb = restTemplate.getForObject("http://localhost:8080/person/" + person.getId(), Person.class);
         person.setRoleId(personInDb.getRoleId());
+        person.setPassword(encoder.encode(person.getPassword()));
         this.personRepository.save(person);
         return ResponseEntity.ok().build();
     }
@@ -115,6 +121,35 @@ public class PersonController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<Person> changeSomeFields(@PathVariable int id, @RequestBody PersonDTO patch) {
+        Person person = this.personRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Person with id = " + id + " not found"
+                ));
+        String name = patch.getName();
+        String password = patch.getPassword();
+        LocalDateTime created = patch.getCreated();
+        int roleId = patch.getRoleId();
+        if (name != null) {
+            checkName(name);
+            person.setName(name);
+        }
+        if (password != null) {
+            checkPassword(password);
+            person.setPassword(encoder.encode(password));
+        }
+        if (created != null) {
+            checkCreated(created);
+            person.setCreated(created);
+        }
+        if (roleId != 0) {
+            checkRoleId(roleId);
+            person.setRoleId(roleId);
+        }
+        return ResponseEntity.ok(personRepository.save(person));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         Person person = new Person();
@@ -124,15 +159,28 @@ public class PersonController {
         return ResponseEntity.ok().build();
     }
 
-    private void checkNameAndPassword(Person person) {
-        if (person.getName() == null || person.getName().isEmpty()) {
+    private void checkName(String name) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Person's name must not be empty");
         }
-        if (personRepository.findByName(person.getName()).isPresent()) {
-            throw new IllegalArgumentException("Person with name " + person.getName() + " already exists");
+        if (personRepository.findByName(name).isPresent()) {
+            throw new IllegalArgumentException("Person with name " + name + " already exists");
         }
-        if (person.getPassword() == null || person.getPassword().length() < 5) {
-            throw new IllegalArgumentException("the password must be more than 4 characters");
+    }
+
+    private void checkPassword(String password) {
+        if (password == null || password.length() < 5) {
+            throw new IllegalArgumentException("Password must be more than 4 characters");
         }
+    }
+
+    private void checkCreated(LocalDateTime created) {
+        if (created.isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Created must be from the past");
+        }
+    }
+
+    private void checkRoleId(int roleId) {
+        restTemplate.getForObject("http://localhost:8080/role/" + roleId, Role.class);
     }
 }

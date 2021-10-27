@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,8 +19,10 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.domain.Message;
 import ru.job4j.chat.domain.Person;
 import ru.job4j.chat.domain.Room;
+import ru.job4j.chat.dto.RoomDTO;
 import ru.job4j.chat.repository.RoomRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -64,7 +67,7 @@ public class RoomController {
 
     @PostMapping("/")
     public ResponseEntity<Room> create(@RequestBody Room room) {
-        checkRoomName(room.getName());
+        checkName(room.getName());
         restTemplate.getForObject("http://localhost:8080/person/" + room.getAuthorId(), Person.class);
         return new ResponseEntity<>(
                 roomRepository.save(room),
@@ -74,7 +77,7 @@ public class RoomController {
 
     @PutMapping("/{id}/name/")
     public ResponseEntity<Void> updateName(@PathVariable int id, @RequestBody String name) {
-        checkRoomName(name);
+        checkName(name);
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Room with id = " + id + " not found"
@@ -82,6 +85,30 @@ public class RoomController {
         room.setName(name);
         roomRepository.save(room);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Room> changeSomeFields(@PathVariable int id, @RequestBody RoomDTO patch) {
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Room with id = " + id + " not found"
+                ));
+        String name = patch.getName();
+        LocalDateTime created = patch.getCreated();
+        int authorId = patch.getAuthorId();
+        if (name != null) {
+            checkName(name);
+            room.setName(name);
+        }
+        if (created != null) {
+            checkCreated(created);
+            room.setCreated(created);
+        }
+        if (authorId != 0) {
+            checkAuthorId(authorId);
+            room.setAuthorId(authorId);
+        }
+        return ResponseEntity.ok(roomRepository.save(room));
     }
 
     @DeleteMapping("/{id}")
@@ -104,12 +131,22 @@ public class RoomController {
         return ResponseEntity.ok().build();
     }
 
-    private void checkRoomName(String roomName) {
+    private void checkName(String roomName) {
         if (roomName == null || roomName.isEmpty()) {
             throw new IllegalArgumentException("Name of room must not be empty");
         }
         if (roomRepository.findByName(roomName).isPresent()) {
             throw new IllegalArgumentException("Room with name " + roomName + " already exists");
         }
+    }
+
+    private void checkCreated(LocalDateTime created) {
+        if (created.isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Created must be from the past");
+        }
+    }
+
+    private void checkAuthorId(int authorId) {
+        restTemplate.getForObject("http://localhost:8080/person/" + authorId, Person.class);
     }
 }
