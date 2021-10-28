@@ -3,6 +3,7 @@ package ru.job4j.chat.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -19,13 +20,17 @@ import ru.job4j.chat.domain.Person;
 import ru.job4j.chat.domain.Room;
 import ru.job4j.chat.dto.MessageDTO;
 import ru.job4j.chat.repository.MessageRepository;
+import ru.job4j.chat.validation.Operation;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Transactional
 @RestController
 @RequestMapping("/message")
+@Validated
 public class MessageController {
     private final MessageRepository messageRepository;
     private final RestTemplate restTemplate;
@@ -50,8 +55,8 @@ public class MessageController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Message> create(@RequestBody Message message) {
-        checkText(message.getText());
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Message> create(@Valid @RequestBody Message message) {
         Person author = restTemplate.getForObject("http://localhost:8080/person/" + message.getAuthorId(), Person.class);
         Room room = restTemplate.getForObject("http://localhost:8080/room/" + message.getRoomId(), Room.class);
         return new ResponseEntity<>(
@@ -61,8 +66,9 @@ public class MessageController {
     }
 
     @PutMapping("/{id}/text/")
-    public ResponseEntity<Void> updateText(@PathVariable int id, @RequestBody String text) {
-        checkText(text);
+    public ResponseEntity<Void> updateText(
+            @PathVariable int id,
+            @Valid @NotBlank(message = "text of message must not be empty") @RequestBody String text) {
         Message message = messageRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Message with id = " + id + " not found"

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +20,10 @@ import ru.job4j.chat.domain.Role;
 import ru.job4j.chat.dto.RoleDTO;
 import ru.job4j.chat.exception.ThereIsNoRoleWithThisNameException;
 import ru.job4j.chat.repository.RoleRepository;
+import ru.job4j.chat.validation.Operation;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +33,7 @@ import java.util.stream.StreamSupport;
 @Transactional
 @RestController
 @RequestMapping("/role")
+@Validated
 public class RoleController {
     private final RoleRepository roleRepository;
     private final ObjectMapper objectMapper;
@@ -64,7 +68,8 @@ public class RoleController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Role> create(@RequestBody Role role) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Role> create(@Valid @RequestBody Role role) {
         checkName(role.getName());
         return new ResponseEntity<Role>(
                 this.roleRepository.save(role),
@@ -73,7 +78,8 @@ public class RoleController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Role role) {
+    @Validated(Operation.OnUpdate.class)
+    public ResponseEntity<Void> update(@Valid @RequestBody Role role) {
         checkName(role.getName());
         this.roleRepository.save(role);
         return ResponseEntity.ok().build();

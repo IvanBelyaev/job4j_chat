@@ -13,7 +13,7 @@ before_install:
 
 install: true
 
-script: mvn clean package -DskipTests=true
+script: mvn clean install
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

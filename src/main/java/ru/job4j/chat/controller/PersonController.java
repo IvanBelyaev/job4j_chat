@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,7 +23,9 @@ import ru.job4j.chat.domain.Role;
 import ru.job4j.chat.domain.Room;
 import ru.job4j.chat.dto.PersonDTO;
 import ru.job4j.chat.repository.PersonRepository;
+import ru.job4j.chat.validation.Operation;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +34,7 @@ import java.util.stream.StreamSupport;
 @Transactional
 @RestController
 @RequestMapping("/person")
+@Validated
 public class PersonController {
     private final PersonRepository personRepository;
     private final RestTemplate restTemplate;
@@ -81,9 +85,9 @@ public class PersonController {
      * @return person with id. Person has default Role (USER).
      */
     @PostMapping({"/", "/sign-up/"})
-    public ResponseEntity<Person> create(@RequestBody Person person) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Person> create(@Valid @RequestBody Person person) {
         checkName(person.getName());
-        checkPassword(person.getPassword());
         Role userRole = restTemplate.getForObject("http://localhost:8080/role/name/ROLE_USER", Role.class);
         person.setRoleId(userRole.getId());
         person.setPassword(encoder.encode(person.getPassword()));
@@ -99,9 +103,9 @@ public class PersonController {
      * @return status of operation.
      */
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Person person) {
+    @Validated(Operation.OnUpdate.class)
+    public ResponseEntity<Void> update(@Valid @RequestBody Person person) {
         checkName(person.getName());
-        checkPassword(person.getPassword());
         Person personInDb = restTemplate.getForObject("http://localhost:8080/person/" + person.getId(), Person.class);
         person.setRoleId(personInDb.getRoleId());
         person.setPassword(encoder.encode(person.getPassword()));

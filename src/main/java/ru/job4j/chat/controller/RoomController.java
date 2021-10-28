@@ -5,6 +5,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -21,7 +22,10 @@ import ru.job4j.chat.domain.Person;
 import ru.job4j.chat.domain.Room;
 import ru.job4j.chat.dto.RoomDTO;
 import ru.job4j.chat.repository.RoomRepository;
+import ru.job4j.chat.validation.Operation;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +34,7 @@ import java.util.stream.StreamSupport;
 @Transactional
 @RestController
 @RequestMapping("/room")
+@Validated
 public class RoomController {
     private final RoomRepository roomRepository;
     private final RestTemplate restTemplate;
@@ -66,7 +71,8 @@ public class RoomController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Room> create(@RequestBody Room room) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Room> create(@Valid @RequestBody Room room) {
         checkName(room.getName());
         restTemplate.getForObject("http://localhost:8080/person/" + room.getAuthorId(), Person.class);
         return new ResponseEntity<>(
@@ -76,7 +82,9 @@ public class RoomController {
     }
 
     @PutMapping("/{id}/name/")
-    public ResponseEntity<Void> updateName(@PathVariable int id, @RequestBody String name) {
+    public ResponseEntity<Void> updateName(
+            @PathVariable int id,
+            @Valid @NotBlank(message = "name of room must not be empty") @RequestBody String name) {
         checkName(name);
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(

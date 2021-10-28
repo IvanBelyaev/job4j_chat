@@ -87,7 +87,7 @@ public class RoleControllerTest {
     @WithMockUser
     public void whenPostRoleThenCreatesNewRole() throws Exception {
         Role user = new Role("user");
-        user.setId(1);
+        user.setId(0);
         when(roleRepository.save(user)).thenReturn(user);
 
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.post("/role/")
@@ -98,7 +98,7 @@ public class RoleControllerTest {
         mockMvc.perform(mockRequest)
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name", is("user")))
-                .andExpect(jsonPath("$.id", is(1)));
+                .andExpect(jsonPath("$.id", is(0)));
     }
 
     @Test
